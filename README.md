@@ -1,66 +1,41 @@
 # TheSend
 
-A minimalist blog system designed for focused reading, built with [Astro](https://astro.build).
+为专注阅读而设计的极简博客系统，基于 [Astro](https://astro.build) 构建。
 
-## Features
-
-- Clean reading-focused design with serif/sans-serif font pairing
-- LaTeX math formula support
-- Client-side search
-- Dark/light mode with system preference detection
-- Mobile-responsive with hamburger menu and scroll-hiding header
-- SEO: structured data, Open Graph, Twitter Card, sitemap, RSS
-- CC BY-NC-SA 4.0 license at article footer
-
-## Quick Start
+## 快速开始
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open http://localhost:4321 in your browser.
+访问 http://localhost:4321
 
-## Commands
+## 写文章
 
-| Command | Action |
-|---------|--------|
-| `npm run dev` | Start dev server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-
-## Project Structure
-
-```text
-/
-├── public/           # Static assets
-├── src/
-│   ├── components/   # Reusable components
-│   ├── config/       # Site configuration
-│   ├── content/      # Blog posts (Markdown)
-│   ├── layouts/      # Page layouts
-│   ├── pages/        # Route pages
-│   └── styles/       # Global styles
-└── astro.config.mjs  # Astro configuration
-```
-
-## Writing Posts
-
-Create Markdown files in `src/content/blog/`:
+在 `src/content/blog/` 目录创建 Markdown 文件：
 
 ```markdown
 ---
-title: "Your Post Title"
-description: "Brief description"
+title: "文章标题"
+description: "简短描述"
 date: 2024-01-01
-category: "Category"
-tags: ["tag1", "tag2"]
+category: "分类"
+tags: ["标签1", "标签2"]
 showToc: true
 ---
 
-Your content here...
+正文内容...
 ```
 
-## License
+## 命令
+
+| 命令 | 说明 |
+|------|------|
+| `npm run dev` | 启动开发服务器 |
+| `npm run build` | 构建生产版本 |
+| `npm run preview` | 预览构建结果 |
+
+## 许可证
 
 CC BY-NC-SA 4.0
