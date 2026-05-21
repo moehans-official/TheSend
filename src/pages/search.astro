@@ -1,0 +1,453 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('blog');
+const sortedPosts = posts
+  .filter(post => !post.data.draft)
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+---
+
+<BaseLayout title="搜索 — TheSend" description="搜索博客文章" skeleton="card">
+  <div class="search">
+    <header class="search-header">
+      <h1 class="page-title">搜索</h1>
+      <div class="search-input-wrapper">
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="输入关键词搜索文章..." 
+          class="search-input"
+          autocomplete="off"
+        />
+      </div>
+    </header>
+    
+    <div id="search-results" class="search-results"></div>
+  </div>
+</BaseLayout>
+
+<script is:inline define:vars={{ posts: sortedPosts }}>
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  
+  // Prepare search index
+  const searchIndex = posts.map(post => ({
+    id: post.id,
+    title: post.data.title,
+    description: post.data.description || '',
+    content: post.body || '',
+    category: post.data.category || '',
+    tags: post.data.tags || [],
+    pubDate: post.data.pubDate,
+  }));
+  
+  function performSearch(query) {
+    if (!query) {
+      searchResults.innerHTML = '';
+      return;
+    }
+    
+    if (query.length < 2) {
+      searchResults.innerHTML = '';
+      return;
+    }
+    
+    const normalizedQuery = query.toLowerCase();
+    const results = searchIndex.filter(post => {
+      const titleMatch = post.title.toLowerCase().includes(normalizedQuery);
+      const descriptionMatch = post.description.toLowerCase().includes(normalizedQuery);
+      const contentMatch = post.content.toLowerCase().includes(normalizedQuery);
+      const categoryMatch = post.category.toLowerCase().includes(normalizedQuery);
+      const tagsMatch = post.tags.some(tag => tag.toLowerCase().includes(normalizedQuery));
+      
+      return titleMatch || descriptionMatch || contentMatch || categoryMatch || tagsMatch;
+    });
+    
+    displayResults(results, query);
+  }
+  
+  function displayResults(results, query) {
+    if (results.length === 0) {
+      searchResults.innerHTML = `
+        <div class="empty-state">
+          <p>未找到包含 "${escapeHtml(query)}" 的文章</p>
+        </div>
+      `;
+      return;
+    }
+    
+    const html = results.map((post, index) => {
+      const date = new Date(post.pubDate).toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      return `
+        <article class="result-item search-result" style="--delay: ${index * 0.05}s">
+          <div class="result-meta">
+            <time>${date}</time>
+            ${post.category ? `<span class="result-category">${post.category}</span>` : ''}
+          </div>
+          <h2 class="result-title">
+            <a href="/blog/${post.id}" data-astro-prefetch>${highlightMatch(escapeHtml(post.title), query)}</a>
+          </h2>
+          ${post.description ? `<p class="result-desc">${highlightMatch(escapeHtml(post.description), query)}</p>` : ''}
+        </article>
+      `;
+    }).join('');
+    
+    searchResults.innerHTML = `
+      <div class="results-header">
+        <p class="results-count">找到 ${results.length} 篇文章</p>
+      </div>
+      <div class="results-list">${html}</div>
+    `;
+  }
+  
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  
+  function highlightMatch(text, query) {
+    if (!text) return '';
+    const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+    return text.replace(regex, '<mark>$1</mark>');
+  }
+  
+  function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  
+  // Debounce
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+  
+  const debouncedSearch = debounce((e) => performSearch(e.target.value), 200);
+  
+  searchInput.addEventListener('input', debouncedSearch);
+  searchInput.focus();
+</script>
+
+<style>
+  :root {
+    --bg-color: #fefefe;
+    --text-color: #1a1a1a;
+    --text-muted: #666666;
+    --text-light: #999999;
+    --border-color: #e8e8e8;
+    --font-serif: 'Crimson Text', 'Source Han Serif SC', 'Noto Serif SC', Georgia, serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --content-max: 700px;
+  }
+
+  [data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --text-color: #e8e8e8;
+    --text-muted: #a0a0a0;
+    --text-light: #666666;
+    --border-color: #333333;
+  }
+
+  .search {
+    max-width: var(--content-max);
+  }
+
+  .search-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
+  }
+
+  .page-title {
+    font-size: 2.25rem;
+    font-weight: 400;
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.01em;
+    transition: color 0.3s ease;
+  }
+
+  .search-input-wrapper {
+    position: relative;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    outline: none;
+    transition: border-color 0.2s, background-color 0.3s, color 0.3s;
+    border-radius: 0;
+    -webkit-appearance: none;
+  }
+
+  .search-input:focus {
+    border-color: var(--text-color);
+  }
+
+  .search-input::placeholder {
+    color: var(--text-light);
+  }
+
+  /* 结果列表 */
+  .search-results {
+    margin-top: 1.5rem;
+  }
+
+  .results-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
+  }
+
+  .results-count {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--text-light);
+    transition: color 0.3s ease;
+  }
+
+  .results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .result-item {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
+  }
+
+  .result-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .result-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--text-light);
+    transition: color 0.3s ease;
+  }
+
+  .result-category {
+    color: var(--text-muted);
+  }
+
+  .result-title {
+    font-size: 1.25rem;
+    font-weight: 400;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+    transition: color 0.3s ease;
+  }
+
+  .result-title a {
+    color: var(--text-color);
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .result-title a:hover {
+    opacity: 0.7;
+  }
+
+  .result-desc {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    transition: color 0.3s ease;
+  }
+
+  .search-result {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeUp 0.3s ease forwards;
+    animation-delay: var(--delay, 0s);
+  }
+
+  @keyframes fadeUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 高亮 */
+  :global(mark) {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    padding: 0.05em 0.15em;
+  }
+
+  /* 空状态 */
+  .empty-state {
+    padding: 3rem 0;
+    text-align: center;
+  }
+
+  .empty-state p {
+    color: var(--text-muted);
+    transition: color 0.3s ease;
+  }
+
+  /* Tablet */
+  @media (max-width: 1024px) {
+    .page-title {
+      font-size: 2rem;
+    }
+  }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .search {
+      max-width: 100%;
+    }
+
+    .search-header {
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+    }
+
+    .page-title {
+      font-size: 1.65rem;
+      margin-bottom: 1rem;
+    }
+
+    .search-input {
+      padding: 0.75rem 0.875rem;
+      font-size: 16px;
+    }
+
+    .results-list {
+      gap: 1.25rem;
+    }
+
+    .result-item {
+      padding-bottom: 1.25rem;
+    }
+
+    .result-meta {
+      font-size: 0.75rem;
+      gap: 0.5rem;
+    }
+
+    .result-title {
+      font-size: 1.1rem;
+      line-height: 1.35;
+    }
+
+    .result-desc {
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .empty-state {
+      padding: 2.5rem 0;
+    }
+  }
+
+  /* Small Mobile */
+  @media (max-width: 480px) {
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .results-list {
+      gap: 1rem;
+    }
+
+    .result-title {
+      font-size: 1.05rem;
+    }
+
+    .result-desc {
+      font-size: 0.9rem;
+    }
+  }
+
+    .search-header {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+    }
+
+    .page-title {
+      font-size: 1.65rem;
+      margin-bottom: 1rem;
+    }
+
+    .search-input {
+      padding: 0.75rem 0.875rem;
+      font-size: 16px; /* Prevent zoom on iOS */
+    }
+
+    .results-list {
+      gap: 1.5rem;
+    }
+
+    .result-item {
+      padding-bottom: 1.25rem;
+    }
+
+    .result-meta {
+      font-size: 0.75rem;
+      gap: 0.5rem;
+    }
+
+    .result-title {
+      font-size: 1.1rem;
+      line-height: 1.35;
+    }
+
+    .result-desc {
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .empty-state {
+      padding: 2.5rem 0;
+    }
+  }
+
+  /* Small Mobile */
+  @media (max-width: 480px) {
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .results-list {
+      gap: 1.25rem;
+    }
+
+    .result-title {
+      font-size: 1.05rem;
+    }
+
+    .result-desc {
+      font-size: 0.9rem;
+    }
+  }
+</style>

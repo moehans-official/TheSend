@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  const filteredPosts = posts.filter(post => !post.data.draft);
+  
+  // Get unique tags
+  const tags = new Set<string>();
+  filteredPosts.forEach(post => {
+    post.data.tags?.forEach(tag => {
+      tags.add(tag);
+    });
+  });
+  
+  return Array.from(tags).map((tag) => ({
+    params: { tag },
+    props: { tag },
+  }));
+}
+
+const { tag } = Astro.props;
+
+const posts = await getCollection('blog');
+const tagPosts = posts
+  .filter(post => !post.data.draft && post.data.tags?.includes(tag))
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+---
+
+<BaseLayout title={`标签: ${tag} - TheSend`} description={`浏览 ${tag} 标签下的文章`}>
+  <div class="tag-page">
+    <h1 class="page-title">标签: #{tag}</h1>
+    <p class="post-count">{tagPosts.length} 篇文章</p>
+    
+    <div class="post-list">
+      {tagPosts.length > 0 ? (
+        tagPosts.map((post) => (
+          <PostCard post={post} />
+        ))
+      ) : (
+        <p class="no-posts">该标签下暂无文章</p>
+      )}
+    </div>
+    
+    <footer class="page-footer">
+      <a href="/" class="back-link" data-astro-prefetch>← 返回首页</a>
+    </footer>
+  </div>
+</BaseLayout>
+
+<style>
+  .tag-page {
+    max-width: 100%;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .post-count {
+    font-size: 0.875rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    margin-bottom: 1.5rem;
+  }
+
+  .post-list {
+    margin-top: 1.5rem;
+  }
+
+  .no-posts {
+    text-align: center;
+    padding: 3rem 0;
+    color: var(--text-color);
+    opacity: 0.7;
+  }
+
+  .page-footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .back-link {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>

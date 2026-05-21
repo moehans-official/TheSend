@@ -1,0 +1,51 @@
+---
+import { siteConfig } from '../config/site.ts';
+
+const { footer, features } = siteConfig;
+---
+
+<footer class="footer">
+  <span class="copyright">{footer.copyright}</span>
+  {features.darkMode && (
+    <button class="theme-toggle" id="theme-toggle" aria-label="切换主题">
+      <span class="theme-icon" id="theme-icon">○</span>
+    </button>
+  )}
+</footer>
+
+<style>
+  .footer {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: color 0.3s ease;
+  }
+
+  .theme-toggle {
+    background: none;
+    border: 1px solid var(--border-color);
+    padding: 0.4rem 0.8rem;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .theme-toggle:hover {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    border-color: var(--text-color);
+  }
+
+  .theme-icon {
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+</style>

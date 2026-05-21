@@ -1,0 +1,1277 @@
+---
+import { siteConfig } from '../config/site.ts';
+import Footer from '../components/Footer.astro';
+import Skeleton from '../components/Skeleton.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  article?: {
+    pubDate: Date;
+    updatedDate?: Date;
+    author?: string;
+    tags?: string[];
+  };
+  skeleton?: 'card' | 'full' | 'none';
+  noindex?: boolean;
+}
+
+const { title, description = siteConfig.description, article, skeleton = 'card', noindex = false } = Astro.props;
+
+const { name, subtitle, author, siteUrl, lang, navigation, features, branding, seo } = siteConfig;
+
+const fullTitle = title === name ? title : `${title} — ${name}`;
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
+const pageDescription = description || siteConfig.description;
+const faviconLinks = [];
+
+if (branding.favicon.svg) faviconLinks.push({ rel: 'icon', type: 'image/svg+xml', href: branding.favicon.svg });
+if (branding.favicon.ico) faviconLinks.push({ rel: 'icon', type: 'image/x-icon', href: branding.favicon.ico });
+if (branding.favicon.png32) faviconLinks.push({ rel: 'icon', type: 'image/png', sizes: '32x32', href: branding.favicon.png32 });
+if (branding.favicon.png16) faviconLinks.push({ rel: 'icon', type: 'image/png', sizes: '16x16', href: branding.favicon.png16 });
+if (branding.favicon.apple) faviconLinks.push({ rel: 'apple-touch-icon', sizes: '180x180', href: branding.favicon.apple });
+
+const ogImage = siteConfig.seo.ogImage || `${siteUrl}/og-image.png`;
+const pageType = article ? 'article' : 'website';
+
+// 构建 robots meta
+const robotsContent = noindex 
+  ? 'noindex, nofollow'
+  : [
+      seo.robots.index ? 'index' : 'noindex',
+      seo.robots.follow ? 'follow' : 'nofollow',
+      'max-image-preview:large',
+      'max-snippet:-1',
+      'max-video-preview:-1',
+    ].join(', ');
+
+// 构建结构化数据
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': article ? 'BlogPosting' : 'WebSite',
+  name: name,
+  headline: title,
+  description: pageDescription,
+  url: canonicalUrl,
+  image: ogImage,
+  ...(article && {
+    datePublished: article.pubDate.toISOString(),
+    dateModified: article.updatedDate?.toISOString() || article.pubDate.toISOString(),
+    author: {
+      '@type': 'Person',
+      name: article.author || author.name,
+      url: author.github || siteUrl,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: name,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${siteUrl}${branding.logo.light || '/favicon.svg'}`,
+      },
+    },
+    keywords: article.tags?.join(', ') || seo.keywords.join(', '),
+    articleSection: article.tags?.[0] || 'Blog',
+  }),
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': canonicalUrl,
+  },
+};
+
+// WebSite 结构化数据（仅首页）
+const webSiteData = Astro.url.pathname === '/' ? {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: name,
+  url: siteUrl,
+  description: siteConfig.description,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${siteUrl}/search?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
+  },
+} : null;
+
+// BreadcrumbList 结构化数据
+const breadcrumbData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: '首页',
+      item: siteUrl,
+    },
+    ...(article ? [{
+      '@type': 'ListItem',
+      position: 2,
+      name: title,
+      item: canonicalUrl,
+    }] : []),
+  ],
+};
+---
+
+<!DOCTYPE html>
+<html lang={lang}>
+  <head>
+    {/* 基础 Meta */}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={pageDescription} />
+    
+    {/* Robots - Google SEO */}
+    <meta name="robots" content={robotsContent} />
+    <meta name="googlebot" content={robotsContent} />
+    
+    {/* Canonical URL */}
+    <link rel="canonical" href={canonicalUrl} />
+    
+    {/* 作者信息 */}
+    <meta name="author" content={author.name} />
+    <meta name="copyright" content={`© ${new Date().getFullYear()} ${author.name}`} />
+    
+    {/* 关键词 */}
+    <meta name="keywords" content={seo.keywords.join(', ')} />
+    
+    {/* 语言 */}
+    <meta http-equiv="content-language" content={lang} />
+    
+    {/* 主题色 */}
+    <meta name="theme-color" content={seo.themeColor} media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content={seo.backgroundColor} media="(prefers-color-scheme: light)" />
+    <meta name="msapplication-TileColor" content={seo.themeColor} />
+    
+    {/* Favicon */}
+    {faviconLinks.length > 0 ? (
+      faviconLinks.map((link) => (
+        <link rel={link.rel} type={link.type} sizes={link.sizes} href={link.href} />
+      ))
+    ) : (
+      <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    )}
+    
+    {/* Apple Touch Icon */}
+    {branding.favicon.apple && (
+      <link rel="apple-touch-icon" sizes="180x180" href={branding.favicon.apple} />
+    )}
+    
+    {/* Manifest */}
+    {branding.favicon.manifest && (
+      <link rel="manifest" href={branding.favicon.manifest} />
+    )}
+    
+    {/* RSS Feed */}
+    {features.rss && (
+      <link rel="alternate" type="application/rss+xml" title={`${name} RSS Feed`} href="/rss.xml" />
+    )}
+    
+    {/* Fonts - 预加载优化 */}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    {/* KaTeX */}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css" media="print" onload="this.media='all'">
+    
+    {/* DNS 预解析 */}
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    
+    {/* 页面预加载 */}
+    <link rel="prefetch" href="/archive" />
+    <link rel="prefetch" href="/search" />
+    <link rel="prefetch" href="/about" />
+    
+    {/* Open Graph - Facebook/LinkedIn */}
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:type" content={pageType} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={fullTitle} />
+    <meta property="og:site_name" content={name} />
+    <meta property="og:locale" content={lang.replace('-', '_')} />
+    
+    {/* Article 专用 OG 标签 */}
+    {article && (
+      <>
+        <meta property="article:published_time" content={article.pubDate.toISOString()} />
+        {article.updatedDate && (
+          <meta property="article:modified_time" content={article.updatedDate.toISOString()} />
+        )}
+        <meta property="article:author" content={article.author || author.name} />
+        <meta property="article:section" content={article.tags?.[0] || 'Technology'} />
+        {article.tags?.map((tag) => (
+          <meta property="article:tag" content={tag} />
+        ))}
+      </>
+    )}
+    
+    {/* Twitter Card */}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={pageDescription} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={fullTitle} />
+    {seo.twitterHandle && (
+      <>
+        <meta name="twitter:site" content={seo.twitterHandle} />
+        <meta name="twitter:creator" content={seo.twitterHandle} />
+      </>
+    )}
+    
+    {/* 站点验证 - Google Search Console */}
+    {seo.googleSiteVerification && (
+      <meta name="google-site-verification" content={seo.googleSiteVerification} />
+    )}
+    
+    {/* Bing 验证 */}
+    {seo.bingSiteVerification && (
+      <meta name="msvalidate.01" content={seo.bingSiteVerification} />
+    )}
+    
+    {/* Baidu 验证 */}
+    {seo.baiduSiteVerification && (
+      <meta name="baidu-site-verification" content={seo.baiduSiteVerification} />
+    )}
+    
+    {/* 结构化数据 - JSON-LD */}
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    
+    {/* WebSite 结构化数据 */}
+    {webSiteData && (
+      <script type="application/ld+json" set:html={JSON.stringify(webSiteData)} />
+    )}
+    
+    {/* BreadcrumbList 结构化数据 */}
+    <script type="application/ld+json" set:html={JSON.stringify(breadcrumbData)} />
+    
+    {/* 主题切换脚本 */}
+    {features.darkMode && (
+      <script is:inline>
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.classList.add('theme-loaded');
+      </script>
+    )}
+  </head>
+  <body>
+    <div class="page">
+      {/* Desktop Sidebar */}
+      <aside class="sidebar">
+        <div class="sidebar-inner">
+          <header class="brand">
+            <a href="/" class="logo" data-astro-prefetch>
+              {(branding.logo.light || branding.logo.dark) ? (
+                <>
+                  {branding.logo.light && (
+                    <img src={branding.logo.light} alt={branding.logo.alt} class="logo-img logo-light" loading="eager" />
+                  )}
+                  {branding.logo.dark && (
+                    <img src={branding.logo.dark} alt={branding.logo.alt} class="logo-img logo-dark" loading="eager" />
+                  )}
+                </>
+              ) : (
+                <>
+                  <span class="logo-main">{name}</span>
+                  <span class="logo-subtitle">{subtitle}</span>
+                </>
+              )}
+            </a>
+          </header>
+          
+          <nav class="navigation" aria-label="主导航">
+            {navigation.map((item) => (
+              <a href={item.href} class="nav-link" data-astro-prefetch>{item.label}</a>
+            ))}
+          </nav>
+          
+          <p class="intro">{subtitle}</p>
+          
+          <Footer />
+        </div>
+      </aside>
+      
+      {/* Mobile Header */}
+      <header class="mobile-header">
+        <a href="/" class="mobile-logo" data-astro-prefetch>
+          {(branding.logo.light || branding.logo.dark) ? (
+            <>
+              {branding.logo.light && (
+                <img src={branding.logo.light} alt={branding.logo.alt} class="logo-img-mobile logo-light" loading="eager" />
+              )}
+              {branding.logo.dark && (
+                <img src={branding.logo.dark} alt={branding.logo.alt} class="logo-img-mobile logo-dark" loading="eager" />
+              )}
+            </>
+          ) : (
+            <span>{name}</span>
+          )}
+        </a>
+        <div class="mobile-actions">
+          {features.darkMode && (
+            <button class="mobile-theme-toggle" id="mobile-theme-toggle" aria-label="切换主题">
+              <span id="mobile-theme-icon">○</span>
+            </button>
+          )}
+          <button class="menu-toggle" id="menu-toggle" aria-label="打开菜单" aria-expanded="false">
+            <span class="menu-icon">
+              <span class="menu-line"></span>
+              <span class="menu-line"></span>
+              <span class="menu-line"></span>
+            </span>
+          </button>
+        </div>
+      </header>
+      
+      {/* Mobile Menu */}
+      <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu-header">
+          <span class="mobile-menu-title">导航</span>
+          <button class="menu-close" id="menu-close" aria-label="关闭菜单">
+            <span class="close-icon">✕</span>
+          </button>
+        </div>
+        <nav class="mobile-navigation" aria-label="移动端导航">
+          {navigation.map((item) => (
+            <a href={item.href} class="mobile-nav-link" data-astro-prefetch>{item.label}</a>
+          ))}
+        </nav>
+        <div class="mobile-menu-footer">
+          <p class="mobile-intro">{subtitle}</p>
+          <span class="mobile-copyright">{siteConfig.footer.copyright} {siteConfig.footer.poweredBy}</span>
+        </div>
+      </div>
+      
+      {/* Main Content */}
+      <main class="main" id="main-content">
+        <div class="content-wrapper" id="content-real">
+          <slot />
+        </div>
+        {skeleton !== 'none' && (
+          <div class="content-skeleton" id="content-skeleton" aria-hidden="true">
+            <Skeleton variant={skeleton} />
+          </div>
+        )}
+      </main>
+      
+      {/* Back to Top */}
+      {features.backToTop && (
+        <button class="back-to-top" id="back-to-top" aria-label="返回顶部">
+          ↑
+        </button>
+      )}
+    </div>
+  </body>
+</html>
+
+<script>
+  // Theme toggle
+  const themeToggle = document.getElementById('theme-toggle');
+  const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+  const themeIcon = document.getElementById('theme-icon');
+  const mobileThemeIcon = document.getElementById('mobile-theme-icon');
+  const html = document.documentElement;
+  
+  function updateThemeIcon(theme) {
+    const icon = theme === 'dark' ? '●' : '○';
+    if (themeIcon) themeIcon.textContent = icon;
+    if (mobileThemeIcon) mobileThemeIcon.textContent = icon;
+  }
+  
+  function toggleTheme() {
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+  }
+  
+  const initialTheme = html.getAttribute('data-theme') || 'light';
+  updateThemeIcon(initialTheme);
+  
+  if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+  if (mobileThemeToggle) mobileThemeToggle.addEventListener('click', toggleTheme);
+  
+  // Mobile menu
+  const menuToggle = document.getElementById('menu-toggle');
+  const menuClose = document.getElementById('menu-close');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+  
+  function openMenu() {
+    mobileMenu.classList.add('is-open');
+    menuToggle.classList.add('active');
+    menuToggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  
+  function closeMenu() {
+    mobileMenu.classList.remove('is-open');
+    menuToggle.classList.remove('active');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+  
+  if (menuToggle) menuToggle.addEventListener('click', () => {
+    if (mobileMenu.classList.contains('is-open')) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  });
+  if (menuClose) menuClose.addEventListener('click', closeMenu);
+  if (mobileMenu) {
+    mobileMenu.addEventListener('click', (e) => {
+      if (e.target === mobileMenu) closeMenu();
+    });
+  }
+  
+  mobileNavLinks.forEach(link => {
+    link.addEventListener('click', closeMenu);
+  });
+  
+  // Header scroll behavior
+  const mobileHeader = document.querySelector('.mobile-header');
+  let lastScrollY = window.scrollY;
+  let ticking = false;
+  
+  function updateHeader() {
+    if (!mobileHeader) return;
+    
+    const currentScrollY = window.scrollY;
+    
+    if (currentScrollY > 100) {
+      if (currentScrollY > lastScrollY) {
+        mobileHeader.classList.add('hidden');
+      } else {
+        mobileHeader.classList.remove('hidden');
+      }
+    } else {
+      mobileHeader.classList.remove('hidden');
+    }
+    
+    lastScrollY = currentScrollY;
+    ticking = false;
+  }
+  
+  // Back to top
+  const backToTop = document.getElementById('back-to-top');
+  
+  function toggleBackToTop() {
+    if (!backToTop) return;
+    
+    if (window.scrollY > 500) {
+      backToTop.classList.add('visible');
+    } else {
+      backToTop.classList.remove('visible');
+    }
+  }
+  
+  if (backToTop) {
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+  
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        updateHeader();
+        toggleBackToTop();
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+  
+  // System theme change
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    if (!localStorage.getItem('theme')) {
+      const newTheme = e.matches ? 'dark' : 'light';
+      html.setAttribute('data-theme', newTheme);
+      updateThemeIcon(newTheme);
+    }
+  });
+  
+  // Intersection Observer for animations
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('fade-in');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    });
+    
+    document.querySelectorAll('.post-card, .archive-item, .search-result').forEach(el => {
+      observer.observe(el);
+    });
+  }
+  
+  // Mobile prefetch optimization
+  const isMobile = window.matchMedia('(pointer: coarse)').matches;
+  const prefetchedUrls = new Set();
+  
+  function prefetchUrl(url) {
+    if (prefetchedUrls.has(url) || url.startsWith('http')) return;
+    prefetchedUrls.add(url);
+    
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = url;
+    link.as = 'document';
+    document.head.appendChild(link);
+  }
+  
+  if (isMobile) {
+    const linkObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const href = entry.target.getAttribute('href');
+          if (href && !href.startsWith('http')) {
+            prefetchUrl(href);
+          }
+        }
+      });
+    }, { rootMargin: '100px' });
+    
+    document.querySelectorAll('a[href^="/"], a[href^="./"]').forEach(link => {
+      linkObserver.observe(link);
+    });
+    
+    document.addEventListener('touchstart', (e) => {
+      const link = e.target.closest('a');
+      if (link && link.href && !link.href.startsWith('http')) {
+        prefetchUrl(link.getAttribute('href'));
+      }
+    }, { passive: true });
+  }
+  
+  // Skeleton screen handling
+  const contentReal = document.getElementById('content-real');
+  const contentSkeleton = document.getElementById('content-skeleton');
+  
+  if (contentSkeleton && contentReal) {
+    requestAnimationFrame(() => {
+      contentSkeleton.style.opacity = '0';
+      contentSkeleton.style.pointerEvents = 'none';
+      
+      setTimeout(() => {
+        contentSkeleton.style.display = 'none';
+      }, 300);
+    });
+    
+    window.addEventListener('load', () => {
+      contentSkeleton.style.display = 'none';
+    });
+  }
+</script>
+
+<style>
+  :root {
+    --bg-color: #fefefe;
+    --sidebar-bg: #fafafa;
+    --text-color: #1a1a1a;
+    --text-muted: #666666;
+    --text-light: #999999;
+    --border-color: #e8e8e8;
+    --accent-color: #1a1a1a;
+    --code-bg: #f5f5f5;
+    --code-block-bg: #1e1e1e;
+    --code-text: #d4d4d4;
+    --font-serif: 'Crimson Text', 'Source Han Serif SC', 'Noto Serif SC', Georgia, serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'SF Mono', Monaco, Inconsolata, 'Fira Code', monospace;
+    --sidebar-width: 280px;
+    --content-max: 700px;
+    
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  [data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --sidebar-bg: #1e1e1e;
+    --text-color: #e8e8e8;
+    --text-muted: #a0a0a0;
+    --text-light: #666666;
+    --border-color: #333333;
+    --accent-color: #e8e8e8;
+    --code-bg: #2a2a2a;
+    --code-block-bg: #0d0d0d;
+    --code-text: #d4d4d4;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-serif);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.8;
+    font-size: 18px;
+    min-height: 100vh;
+    opacity: 0;
+    animation: fadeInBody 0.3s ease-out forwards;
+  }
+
+  @keyframes fadeInBody {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .page {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .sidebar-inner {
+    padding: 4rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: var(--sidebar-width);
+  }
+
+  .brand {
+    margin-bottom: 2.5rem;
+  }
+
+  .logo {
+    text-decoration: none;
+    color: var(--text-color);
+    transition: color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .logo-main {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .logo-subtitle {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-light);
+    letter-spacing: 0.02em;
+    line-height: 1.4;
+    transition: color 0.3s ease;
+  }
+
+  .logo-img {
+    max-height: 40px;
+    width: auto;
+    display: none;
+  }
+
+  [data-theme="light"] .logo-img.logo-light,
+  :root:not([data-theme="dark"]) .logo-img.logo-light {
+    display: block;
+  }
+
+  [data-theme="dark"] .logo-img.logo-dark {
+    display: block;
+  }
+
+  [data-theme="dark"] .logo-img.logo-light {
+    display: none;
+  }
+
+  .navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .nav-link {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 0.35rem 0;
+    transition: color 0.2s ease;
+    position: relative;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0.25rem;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: var(--text-color);
+    transition: width 0.2s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--text-color);
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  .intro {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    flex: 1;
+    transition: color 0.3s ease;
+  }
+
+  .mobile-header {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+    z-index: 90;
+    padding: 0 1rem;
+    align-items: center;
+    justify-content: space-between;
+    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  }
+
+  .mobile-header.hidden {
+    transform: translateY(-100%);
+  }
+
+  .mobile-logo {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+  }
+
+  .logo-img-mobile {
+    max-height: 32px;
+    width: auto;
+    display: none;
+  }
+
+  [data-theme="light"] .logo-img-mobile.logo-light,
+  :root:not([data-theme="dark"]) .logo-img-mobile.logo-light {
+    display: block;
+  }
+
+  [data-theme="dark"] .logo-img-mobile.logo-dark {
+    display: block;
+  }
+
+  [data-theme="dark"] .logo-img-mobile.logo-light {
+    display: none;
+  }
+
+  .mobile-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .mobile-theme-toggle {
+    background: none;
+    border: 1px solid var(--border-color);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 1rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-theme-toggle:hover,
+  .mobile-theme-toggle:active {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    border-color: var(--text-color);
+  }
+
+  .menu-toggle {
+    background: none;
+    border: 1px solid var(--border-color);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .menu-toggle:hover,
+  .menu-toggle:active {
+    background-color: var(--text-color);
+    border-color: var(--text-color);
+  }
+
+  .menu-toggle:hover .menu-line,
+  .menu-toggle:active .menu-line {
+    background-color: var(--bg-color);
+  }
+
+  .menu-icon {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 20px;
+    transition: transform 0.3s ease;
+  }
+
+  .menu-toggle.active .menu-icon {
+    transform: rotate(45deg);
+  }
+
+  .menu-line {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background-color: var(--text-color);
+    transition: all 0.3s ease;
+    border-radius: 1px;
+  }
+
+  .menu-toggle.active .menu-line:first-child {
+    transform: translateY(3.5px) rotate(90deg);
+  }
+
+  .menu-toggle.active .menu-line:last-child {
+    opacity: 0;
+    transform: translateY(-3.5px);
+  }
+
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-color);
+    z-index: 200;
+    flex-direction: column;
+    padding: 1.25rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .mobile-menu.is-open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .mobile-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .mobile-menu-title {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-light);
+  }
+
+  .menu-close {
+    background: none;
+    border: none;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    font-size: 1.25rem;
+    transition: color 0.2s ease;
+  }
+
+  .menu-close:hover {
+    color: var(--text-muted);
+  }
+
+  .mobile-navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+  }
+
+  .mobile-nav-link {
+    font-family: var(--font-sans);
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+    text-decoration: none;
+    padding: 0.75rem 0;
+    transition: color 0.2s ease;
+    position: relative;
+  }
+
+  .mobile-nav-link:hover {
+    color: var(--text-muted);
+  }
+
+  .mobile-menu-footer {
+    margin-top: auto;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .mobile-intro {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-copyright {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    color: var(--text-light);
+  }
+
+  .main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    min-height: 100vh;
+    padding: 4rem 3rem;
+  }
+
+  .content-wrapper {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  .content-skeleton {
+    position: absolute;
+    top: 4rem;
+    left: 3rem;
+    right: 3rem;
+    max-width: var(--content-max);
+    transition: opacity 0.3s ease;
+    z-index: 1;
+  }
+
+  .main {
+    position: relative;
+  }
+
+  #content-real {
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+    animation: contentFadeIn 0.3s ease forwards;
+    animation-delay: 0.05s;
+  }
+
+  @keyframes contentFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .back-to-top {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    font-size: 1.25rem;
+    cursor: pointer;
+    z-index: 80;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .back-to-top.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .back-to-top:hover,
+  .back-to-top:active {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    border-color: var(--text-color);
+  }
+
+  @media (max-width: 1024px) {
+    :root {
+      --sidebar-width: 240px;
+    }
+    
+    .sidebar-inner {
+      padding: 3rem 2rem;
+    }
+    
+    .main {
+      padding: 3rem 2rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    body {
+      font-size: 17px;
+    }
+    
+    .sidebar {
+      display: none;
+    }
+    
+    .mobile-header {
+      display: flex;
+    }
+    
+    .mobile-menu {
+      display: flex;
+    }
+    
+    .main {
+      margin-left: 0;
+      padding: 5rem 1.25rem 2rem;
+      min-height: 100vh;
+    }
+
+    .back-to-top {
+      display: flex;
+    }
+
+    .content-skeleton {
+      top: 5rem;
+      left: 1.25rem;
+      right: 1.25rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    body {
+      font-size: 16px;
+    }
+    
+    .main {
+      padding: 5rem 1rem 1.5rem;
+    }
+
+    .mobile-header {
+      height: 52px;
+      padding: 0 0.875rem;
+    }
+
+    .mobile-logo {
+      font-size: 1.1rem;
+    }
+
+    .mobile-theme-toggle,
+    .menu-toggle {
+      width: 40px;
+      height: 40px;
+    }
+
+    .content-skeleton {
+      top: 5rem;
+      left: 1rem;
+      right: 1rem;
+    }
+  }
+
+  @media print {
+    .sidebar,
+    .mobile-header,
+    .back-to-top {
+      display: none !important;
+    }
+    
+    .main {
+      margin-left: 0 !important;
+      max-width: 100%;
+      padding: 2rem;
+    }
+    
+    pre {
+      background-color: #f5f5f5 !important;
+      color: #333 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      border: 1px solid #ddd;
+    }
+  }
+
+  @media (max-width: 768px) {
+    html {
+      font-size: 16px;
+      -webkit-overflow-scrolling: touch;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    html {
+      font-size: 15px;
+    }
+  }
+
+  button,
+  a {
+    touch-action: manipulation;
+  }
+
+  button,
+  a,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .post-card,
+  .archive-item,
+  .search-result {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    will-change: opacity, transform;
+  }
+
+  .post-card.fade-in,
+  .archive-item.fade-in,
+  .search-result.fade-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    
+    html {
+      scroll-behavior: auto;
+    }
+    
+    body {
+      animation: none;
+    }
+    
+    .content-wrapper {
+      animation: none;
+    }
+    
+    .post-card,
+    .archive-item,
+    .search-result {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+
+  /* Mobile performance */
+  @media (max-width: 768px) {
+    .post-card,
+    .archive-item,
+    .search-result {
+      transform: translateY(5px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    
+    body {
+      animation-duration: 0.2s;
+    }
+    
+    .content-wrapper {
+      animation-duration: 0.3s;
+    }
+  }
+</style>

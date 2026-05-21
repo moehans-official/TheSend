@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  const filteredPosts = posts.filter(post => !post.data.draft);
+  
+  // Get unique categories
+  const categories = new Set<string>();
+  filteredPosts.forEach(post => {
+    if (post.data.category) {
+      categories.add(post.data.category);
+    }
+  });
+  
+  return Array.from(categories).map((category) => ({
+    params: { category },
+    props: { category },
+  }));
+}
+
+const { category } = Astro.props;
+
+const posts = await getCollection('blog');
+const categoryPosts = posts
+  .filter(post => !post.data.draft && post.data.category === category)
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+---
+
+<BaseLayout title={`分类: ${category} - TheSend`} description={`浏览 ${category} 分类下的文章`}>
+  <div class="category-page">
+    <h1 class="page-title">分类: {category}</h1>
+    <p class="post-count">{categoryPosts.length} 篇文章</p>
+    
+    <div class="post-list">
+      {categoryPosts.length > 0 ? (
+        categoryPosts.map((post) => (
+          <PostCard post={post} />
+        ))
+      ) : (
+        <p class="no-posts">该分类下暂无文章</p>
+      )}
+    </div>
+    
+    <footer class="page-footer">
+      <a href="/category" class="back-link" data-astro-prefetch>← 查看所有分类</a>
+    </footer>
+  </div>
+</BaseLayout>
+
+<style>
+  .category-page {
+    max-width: 100%;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .post-count {
+    font-size: 0.875rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    margin-bottom: 1.5rem;
+  }
+
+  .post-list {
+    margin-top: 1.5rem;
+  }
+
+  .no-posts {
+    text-align: center;
+    padding: 3rem 0;
+    color: var(--text-color);
+    opacity: 0.7;
+  }
+
+  .page-footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .back-link {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>

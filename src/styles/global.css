@@ -1,0 +1,362 @@
+/* Global Styles for TheSend */
+
+/* Light Mode (Default) */
+:root {
+  --bg-color: #fefefe;
+  --sidebar-bg: #fafafa;
+  --text-color: #1a1a1a;
+  --text-muted: #666666;
+  --text-light: #999999;
+  --border-color: #e8e8e8;
+  --accent-color: #1a1a1a;
+  --code-bg: #f0f0f0;
+  --code-block-bg: #f5f5f5;
+  --code-text: #333333;
+  --code-border: #e0e0e0;
+  --font-serif: 'Crimson Text', 'Source Han Serif SC', 'Noto Serif SC', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'SF Mono', Monaco, Inconsolata, 'Fira Code', monospace;
+  --sidebar-width: 280px;
+  --content-max: 700px;
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+  --bg-color: #1a1a1a;
+  --sidebar-bg: #1e1e1e;
+  --text-color: #e8e8e8;
+  --text-muted: #a0a0a0;
+  --text-light: #666666;
+  --border-color: #333333;
+  --accent-color: #e8e8e8;
+  --code-bg: #2a2a2a;
+  --code-block-bg: #252525;
+  --code-text: #d4d4d4;
+  --code-border: #3a3a3a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-serif);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.8;
+  font-size: 18px;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.page {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* 侧边栏 */
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.sidebar-inner {
+  padding: 4rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: var(--sidebar-width);
+}
+
+/* Logo */
+.brand {
+  margin-bottom: 2.5rem;
+}
+
+.logo {
+  text-decoration: none;
+  color: var(--text-color);
+}
+
+.logo-main {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+/* 导航 */
+.navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 2rem;
+}
+
+.nav-link {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 0.35rem 0;
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: var(--text-color);
+}
+
+/* 简介 */
+.intro {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  flex: 1;
+}
+
+/* 页脚 */
+.footer {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 主题切换按钮 */
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.8rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  border-color: var(--text-color);
+}
+
+/* 主内容区 */
+.main {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  padding: 4rem 3rem;
+}
+
+/* Code Styles - Inline */
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* Code Block - Subtle styling */
+pre {
+  background-color: var(--code-block-bg);
+  color: var(--code-text);
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  border-radius: 6px;
+  border: 1px solid var(--code-border);
+  position: relative;
+}
+
+pre::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-light);
+  background-color: transparent;
+  opacity: 0.7;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  color: var(--code-text);
+}
+
+/* Inline code */
+:not(pre) > code {
+  background-color: var(--code-bg);
+  color: var(--text-color);
+  padding: 0.15em 0.4em;
+  font-size: 0.85em;
+  border-radius: 3px;
+  border: 1px solid var(--code-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--text-color);
+  color: var(--bg-color);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Focus */
+:focus {
+  outline: 2px solid var(--text-muted);
+  outline-offset: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--text-color);
+  outline-offset: 2px;
+}
+
+/* KaTeX */
+.katex {
+  font-size: 1em;
+}
+
+.katex-display {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 240px;
+  }
+  
+  .sidebar-inner {
+    padding: 3rem 2rem;
+  }
+  
+  .main {
+    padding: 3rem 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+  
+  .main {
+    margin-left: 0;
+    padding: 2rem 1.5rem;
+  }
+}
+
+/* Print */
+@media print {
+  .sidebar,
+  .mobile-header,
+  .back-to-top {
+    display: none !important;
+  }
+  
+  .main {
+    margin-left: 0 !important;
+    max-width: 100%;
+    padding: 2rem;
+  }
+  
+  pre {
+    background-color: #f5f5f5 !important;
+    color: #333 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    border: 1px solid #ddd;
+  }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+  
+  /* Smooth scrolling for iOS */
+  -webkit-overflow-scrolling: touch;
+  
+  /* Prevent text size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Touch Action Optimizations */
+button,
+a {
+  touch-action: manipulation;
+}
+
+/* Remove default tap highlight on mobile */
+button,
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Improve readability on small screens */
+@media (max-width: 480px) {
+  html {
+    font-size: 15px;
+  }
+}
+  
+  .main {
+    margin-left: 0;
+    max-width: 100%;
+  }
+  
+  pre {
+    background-color: #f5f5f5 !important;
+    color: #333 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

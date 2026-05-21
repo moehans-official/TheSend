@@ -1,0 +1,121 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+}
+
+const { post } = Astro.props;
+const { title, pubDate, description, category, tags } = post.data;
+const formattedDate = new Date(pubDate).toLocaleDateString('zh-CN', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+---
+
+<article class="post-card">
+  <h2 class="post-title">
+    <a href={`/blog/${post.id}`} data-astro-prefetch>{title}</a>
+  </h2>
+  <div class="post-meta">
+    <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+    {category && (
+      <span class="category">
+        <a href={`/category/${category}`} data-astro-prefetch>{category}</a>
+      </span>
+    )}
+  </div>
+  {description && <p class="post-description">{description}</p>}
+  {tags && tags.length > 0 && (
+    <div class="post-tags">
+      {tags.map((tag) => (
+        <a href={`/tag/${tag}`} class="tag" data-astro-prefetch>#{tag}</a>
+      ))}
+    </div>
+  )}
+</article>
+
+<style>
+  .post-card {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeInUp 0.4s ease forwards;
+  }
+
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .post-card:last-child {
+    border-bottom: none;
+  }
+
+  .post-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .post-title a {
+    color: var(--text-color);
+    text-decoration: none;
+  }
+
+  .post-title a:hover {
+    text-decoration: underline;
+  }
+
+  .post-meta {
+    font-size: 0.875rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    margin-bottom: 0.75rem;
+    display: flex;
+    gap: 1rem;
+  }
+
+  .post-meta time {
+    font-family: var(--font-mono);
+  }
+
+  .category a {
+    color: var(--text-color);
+    text-decoration: none;
+  }
+
+  .category a:hover {
+    text-decoration: underline;
+  }
+
+  .post-description {
+    color: var(--text-color);
+    opacity: 0.8;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+  }
+
+  .post-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 0.875rem;
+    color: var(--text-color);
+    text-decoration: none;
+    opacity: 0.7;
+  }
+
+  .tag:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+</style>

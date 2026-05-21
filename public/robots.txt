@@ -1,0 +1,53 @@
+# TheSend Blog - Robots.txt
+# https://www.robotstxt.org/robotstxt.html
+
+User-agent: *
+Allow: /
+
+# 允许爬虫访问的内容
+Allow: /blog/
+Allow: /archive/
+Allow: /about/
+Allow: /search/
+Allow: /category/
+Allow: /tag/
+Allow: /rss.xml
+Allow: /sitemap.xml
+
+# 禁止爬虫访问的内容
+Disallow: /api/
+Disallow: /admin/
+Disallow: /draft/
+Disallow: /tmp/
+Disallow: /*?*
+
+# 爬虫速率限制
+Crawl-delay: 1
+
+# Google 爬虫特别设置
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0.5
+
+# Bing 爬虫
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Baidu 爬虫
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 2
+
+# 禁止某些爬虫
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+# 站点地图
+Sitemap: https://example.com/sitemap-index.xml

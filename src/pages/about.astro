@@ -1,0 +1,281 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="关于 — TheSend" description="关于 TheSend 博客" skeleton="card">
+  <div class="about">
+    <header class="about-header">
+      <h1 class="page-title">关于</h1>
+    </header>
+    
+    <div class="about-content">
+      <p class="lead">
+        TheSend 是一个基于 Astro 框架开发的博客系统，专注于提供纯粹的阅读体验。
+      </p>
+      
+      <h2>设计哲学</h2>
+      <p>
+        我们相信好的内容不需要过多的装饰。TheSend 采用极简的设计风格，通过合理的排版、舒适的字距和留白，让读者的注意力完全集中在文字本身。
+      </p>
+      <p>
+        侧边栏与主内容区的分屏布局，灵感来源于传统书籍的阅读体验。左侧固定导航提供稳定的上下文，右侧主区域展示内容，形成一种专注而沉浸的阅读氛围。
+      </p>
+      
+      <h2>技术特性</h2>
+      <ul>
+        <li>纯静态生成，无需服务器端运行时</li>
+        <li>支持 Markdown 和 LaTeX 数学公式</li>
+        <li>自动生成文章目录和归档</li>
+        <li>全文搜索功能</li>
+        <li>RSS 订阅支持</li>
+        <li>Sitemap 自动生成</li>
+      </ul>
+      
+      <h2>排版</h2>
+      <p>
+        正文使用 Crimson Text 衬线字体，提供舒适的长时间阅读体验。标题使用 Inter 无衬线字体，形成清晰的视觉层次。等宽字体用于代码和元信息，保持信息密度的一致性。
+      </p>
+      
+      <h2>联系</h2>
+      <p>
+        如有任何问题或建议，欢迎通过以下方式联系：
+      </p>
+      <ul class="contact-list">
+        <li>GitHub: <a href="https://github.com" target="_blank">@yourusername</a></li>
+        <li>Email: <a href="mailto:your@email.com">your@email.com</a></li>
+      </ul>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  :root {
+    --bg-color: #fefefe;
+    --text-color: #1a1a1a;
+    --text-muted: #666666;
+    --text-light: #999999;
+    --border-color: #e8e8e8;
+    --font-serif: 'Crimson Text', 'Source Han Serif SC', 'Noto Serif SC', Georgia, serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --content-max: 700px;
+  }
+
+  [data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --text-color: #e8e8e8;
+    --text-muted: #a0a0a0;
+    --text-light: #666666;
+    --border-color: #333333;
+  }
+
+  .about {
+    max-width: var(--content-max);
+  }
+
+  .about-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
+  }
+
+  .page-title {
+    font-size: 2.25rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    transition: color 0.3s ease;
+  }
+
+  .about-content {
+    line-height: 1.75;
+    font-size: 1.05rem;
+  }
+
+  .lead {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    line-height: 1.65;
+    transition: color 0.3s ease;
+  }
+
+  h2 {
+    font-family: var(--font-sans);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 2.5rem;
+    margin-bottom: 0.875rem;
+    letter-spacing: -0.01em;
+    transition: color 0.3s ease;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    transition: color 0.3s ease;
+  }
+
+  ul {
+    margin-bottom: 1.25rem;
+    padding-left: 1.5rem;
+  }
+
+  li {
+    margin-bottom: 0.4rem;
+    transition: color 0.3s ease;
+  }
+
+  a {
+    color: var(--text-color);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+    transition: color 0.3s ease;
+  }
+
+  a:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  .contact-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .contact-list li {
+    margin-bottom: 0.4rem;
+  }
+
+  /* Tablet */
+  @media (max-width: 1024px) {
+    .page-title {
+      font-size: 2rem;
+    }
+  }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .about {
+      max-width: 100%;
+    }
+
+    .about-header {
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+    }
+
+    .page-title {
+      font-size: 1.65rem;
+    }
+
+    .about-content {
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .lead {
+      font-size: 1.05rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h2 {
+      font-size: 1.05rem;
+      margin-top: 1.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    ul {
+      padding-left: 1.25rem;
+    }
+
+    p {
+      margin-bottom: 0.875rem;
+    }
+
+    li {
+      margin-bottom: 0.35rem;
+    }
+  }
+
+  /* Small Mobile */
+  @media (max-width: 480px) {
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .about-content {
+      font-size: 0.95rem;
+      line-height: 1.65;
+    }
+
+    .lead {
+      font-size: 1rem;
+    }
+
+    h2 {
+      font-size: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .tech-item {
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .tech-name {
+      min-width: auto;
+    }
+  }
+
+    .about-header {
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+    }
+
+    .page-title {
+      font-size: 1.65rem;
+    }
+
+    .about-content {
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .lead {
+      font-size: 1.05rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1.05rem;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    ul {
+      padding-left: 1.25rem;
+    }
+
+    p {
+      margin-bottom: 0.875rem;
+    }
+  }
+
+  /* Small Mobile */
+  @media (max-width: 480px) {
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .about-content {
+      font-size: 0.95rem;
+    }
+
+    .lead {
+      font-size: 1rem;
+    }
+
+    h2 {
+      font-size: 1rem;
+      margin-top: 1.75rem;
+    }
+  }
+</style>

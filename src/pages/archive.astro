@@ -1,0 +1,331 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('blog');
+const sortedPosts = posts
+  .filter(post => !post.data.draft)
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+
+// Group by year
+const groupedByYear: Record<string, typeof sortedPosts> = {};
+sortedPosts.forEach(post => {
+  const year = new Date(post.data.pubDate).getFullYear().toString();
+  if (!groupedByYear[year]) {
+    groupedByYear[year] = [];
+  }
+  groupedByYear[year].push(post);
+});
+
+const years = Object.keys(groupedByYear).sort((a, b) => parseInt(b) - parseInt(a));
+---
+
+<BaseLayout title="归档 — TheSend" description="按时间顺序浏览所有文章" skeleton="card">
+  <div class="archive">
+    <header class="archive-header">
+      <h1 class="page-title">归档</h1>
+      <p class="archive-desc">
+        共 {sortedPosts.length} 篇文章，跨越 {years.length} 年
+      </p>
+    </header>
+    
+    <div class="archive-timeline">
+      {years.map((year) => (
+        <section class="year-section">
+          <h2 class="year-title">
+            <span class="year-number">{year}</span>
+            <span class="year-count">{groupedByYear[year].length} 篇</span>
+          </h2>
+          <ul class="posts-list">
+            {groupedByYear[year].map((post, index) => {
+              const date = new Date(post.data.pubDate);
+              return (
+                <li class="post-item archive-item" style={`--delay: ${index * 0.03}s`}>
+                  <time class="post-date">
+                    {date.getMonth() + 1}月{date.getDate()}日
+                  </time>
+                  <a href={`/blog/${post.id}`} class="post-link" data-astro-prefetch>{post.data.title}</a>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  :root {
+    --bg-color: #fefefe;
+    --text-color: #1a1a1a;
+    --text-muted: #666666;
+    --text-light: #999999;
+    --border-color: #e8e8e8;
+    --font-serif: 'Crimson Text', 'Source Han Serif SC', 'Noto Serif SC', Georgia, serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --content-max: 700px;
+  }
+
+  [data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --text-color: #e8e8e8;
+    --text-muted: #a0a0a0;
+    --text-light: #666666;
+    --border-color: #333333;
+  }
+
+  .archive {
+    max-width: var(--content-max);
+  }
+
+  .archive-header {
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
+  }
+
+  .page-title {
+    font-size: 2.25rem;
+    font-weight: 400;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.01em;
+    transition: color 0.3s ease;
+  }
+
+  .archive-desc {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    transition: color 0.3s ease;
+  }
+
+  /* 时间线 */
+  .year-section {
+    margin-bottom: 3rem;
+  }
+
+  .year-title {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: border-color 0.3s ease;
+  }
+
+  .year-number {
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    letter-spacing: -0.02em;
+    transition: color 0.3s ease;
+  }
+
+  .year-count {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-weight: 400;
+    transition: color 0.3s ease;
+  }
+
+  .posts-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .post-item {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    align-items: baseline;
+    gap: 1.25rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+  }
+
+  .post-item:hover {
+    border-bottom-color: var(--border-color);
+  }
+
+  .post-item:last-child {
+    border-bottom: none;
+  }
+
+  .post-date {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--text-light);
+    transition: color 0.3s ease;
+  }
+
+  .post-link {
+    color: var(--text-color);
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .post-link:hover {
+    opacity: 0.7;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .archive-item {
+    opacity: 0;
+    transform: translateX(-10px);
+    animation: slideInLeft 0.3s ease forwards;
+    animation-delay: var(--delay, 0s);
+  }
+
+  @keyframes slideInLeft {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Tablet */
+  @media (max-width: 1024px) {
+    .page-title {
+      font-size: 2rem;
+    }
+  }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .archive {
+      max-width: 100%;
+    }
+
+    .archive-header {
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+    }
+
+    .page-title {
+      font-size: 1.65rem;
+    }
+
+    .archive-desc {
+      font-size: 0.9rem;
+    }
+
+    .year-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .year-title {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+    }
+
+    .year-number {
+      font-size: 1.25rem;
+    }
+
+    .year-count {
+      font-size: 0.75rem;
+    }
+
+    .post-item {
+      grid-template-columns: 75px 1fr;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+    }
+
+    .post-date {
+      font-size: 0.75rem;
+      min-width: auto;
+    }
+
+    .post-link {
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+  }
+
+  /* Small Mobile */
+  @media (max-width: 480px) {
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .year-section {
+      margin-bottom: 1.25rem;
+    }
+
+    .post-item {
+      grid-template-columns: 65px 1fr;
+      gap: 0.5rem;
+    }
+
+    .post-link {
+      font-size: 0.9rem;
+    }
+  }
+
+    .archive-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+    }
+
+    .page-title {
+      font-size: 1.65rem;
+    }
+
+    .archive-desc {
+      font-size: 0.9rem;
+    }
+
+    .year-section {
+      margin-bottom: 2.5rem;
+    }
+
+    .year-title {
+      margin-bottom: 1rem;
+    }
+
+    .year-number {
+      font-size: 1.35rem;
+    }
+
+    .post-item {
+      grid-template-columns: 80px 1fr;
+      gap: 1rem;
+      padding: 0.6rem 0;
+    }
+
+    .post-date {
+      font-size: 0.75rem;
+    }
+
+    .post-link {
+      font-size: 0.95rem;
+    }
+  }
+
+  /* Small Mobile */
+  @media (max-width: 480px) {
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .year-section {
+      margin-bottom: 2rem;
+    }
+
+    .post-item {
+      grid-template-columns: 70px 1fr;
+      gap: 0.75rem;
+    }
+
+    .post-link {
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+  }
+</style>

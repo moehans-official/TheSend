@@ -1,0 +1,47 @@
+/* TheSend Blog - Humans.txt */
+/* 了解网站背后的人 */
+
+/* TEAM */
+
+Author: Your Name
+Site: https://example.com
+Twitter: @yourusername
+GitHub: https://github.com/yourusername
+Location: China
+
+/* THANKS */
+
+Name: Astro Team
+Site: https://astro.build/
+
+Name: Shiki
+Site: https://shiki.style/
+
+Name: KaTeX
+Site: https://katex.org/
+
+/* SITE */
+
+Last update: 2026/05/21
+Standards: HTML5, CSS3, ES6+
+Components: Astro, TypeScript, Markdown
+Software: VS Code, Node.js, npm
+
+/* TECHNOLOGY */
+
+Framework: Astro 6.x
+Language: TypeScript
+Styling: CSS Variables, CSS Grid, Flexbox
+Fonts: Crimson Text, Inter, Noto Sans SC
+Icons: SVG
+Deployment: Static Site
+
+/* BUILD */
+
+Build time: {new Date().toISOString()}
+Node version: 20.x
+
+/* CONTACT */
+
+Email: your@email.com
+GitHub Issues: https://github.com/yourusername/thesend/issues

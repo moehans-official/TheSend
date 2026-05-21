@@ -1,0 +1,96 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('blog');
+const filteredPosts = posts.filter(post => !post.data.draft);
+
+// Group by category
+const categories: Record<string, typeof filteredPosts> = {};
+filteredPosts.forEach(post => {
+  const category = post.data.category || '未分类';
+  if (!categories[category]) {
+    categories[category] = [];
+  }
+  categories[category].push(post);
+});
+
+const sortedCategories = Object.keys(categories).sort();
+---
+
+<BaseLayout title="分类 - TheSend" description="按分类浏览文章">
+  <div class="categories">
+    <h1 class="page-title">分类</h1>
+    
+    <div class="categories-list">
+      {sortedCategories.length > 0 ? (
+        sortedCategories.map((category) => (
+          <section class="category-section">
+            <h2 class="category-name">
+              <a href={`/category/${category}`} data-astro-prefetch>{category}</a>
+              <span class="post-count">({categories[category].length})</span>
+            </h2>
+          </section>
+        ))
+      ) : (
+        <p class="no-categories">暂无分类</p>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .categories {
+    max-width: 100%;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .categories-list {
+    margin-top: 1.5rem;
+  }
+
+  .category-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .category-section:last-child {
+    border-bottom: none;
+  }
+
+  .category-name {
+    font-size: 1.125rem;
+    font-weight: 700;
+  }
+
+  .category-name a {
+    color: var(--text-color);
+    text-decoration: none;
+  }
+
+  .category-name a:hover {
+    text-decoration: underline;
+  }
+
+  .post-count {
+    font-size: 0.875rem;
+    color: var(--text-color);
+    opacity: 0.7;
+    font-weight: 400;
+  }
+
+  .no-categories {
+    text-align: center;
+    padding: 3rem 0;
+    color: var(--text-color);
+    opacity: 0.7;
+  }
+</style>
