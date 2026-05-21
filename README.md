@@ -1,6 +1,6 @@
 # TheSend
 
-为专注阅读而设计的极简博客系统，基于 [Astro](https://astro.build) 构建。
+为专注而设计的极简博客系统，基于 [Astro](https://astro.build) 构建。
 
 ## 快速开始
 
@@ -38,4 +38,4 @@ showToc: true
 
 ## 许可证
 
-CC BY-NC-SA 4.0
+MIT
